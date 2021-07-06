@@ -7,13 +7,6 @@
 ######   ----    polygon. When working with multipolygons, setting the same factor for
 ######   ----    all of them will scale them all to the same limits. If fac > 10 it
 ######   ----    produces error 1
-x <- sel_r[8,]
-type <- "x"
-fac <- 4
-
-s_scl(sel_i[8,], fac = 4, type = "x")
-
-plot(x)
 
 s_scl <- function(x, fac = 7, type = "f"){
 
