@@ -1,0 +1,20 @@
+Package: GeomeasuRe
+Type: Package
+Title: GeomeasuRe. An R package for capturing morphometric variability
+Version: 0.1.0
+Author: Alfredo Cortell-Nicolau
+Maintainer: Alfreco Cortell-Nicolau <alfredo.cortell-nicolau@uv.es>
+Description: This package is able to offer the morphometry of polygonal objects, displayed as vectorised images, in different continuous measures. In order to do, it constructs a grid with 1 mm separated lines, and then measures the intersection between those lines and the polygon being measured. The result is a series of line-lengths which can be used in different ways depending on the research question.
+License: 
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    geosphere,
+    LearnGeom,
+    rgdal,
+    rgeos,
+    sf
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
