@@ -1,0 +1,155 @@
+---
+title: "GeomeasuRe. An R package to capture singularised morphometry"
+author: "Alfredo Cortell-Nicolau"
+date: "3/2/2021"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{GeomeasuRe. An R package to capture singularised morphometry}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 8,
+  dev = "svg"
+)
+```
+
+
+# Introduction
+The scope of the GeomeasuRe package is to capture the morphometry of polygonal objects in a singularised manner. Unlike other methods for capturing morphometry, GeomeasuRe is not based on mathematical modelling and its aim is not only to obtain overall morphometric variation, but also to understand what are the parts of each piece that can account for that variation. The rationale is quite simple. GeomeasuRe constructs a grid, where it deploys the polygon to be measured. That grid is basically a series of 1 mm separated lines vertically and horizontally, each one of which captures the length of the polygon how it crosses it. This gives a series of values which can construct the polygon at individual 1 mm separated points, thus understanding, and being able to work directly, with specific parts of the piece. But let's see how it works!
+
+## Installing the package
+As this is still the development version, the package cannot be found at CRAN just yet. In order to download this version, you can access directly to the github repository with the following command (devtools must be installed)
+
+```{r}
+library(devtools)
+install_github('acortell3/GeomeasuRe')
+
+```
+
+And just load the library with the usual command
+```{r setup}
+library(GeomeasuRe)
+```
+
+# The workflow
+
+The package has been originally developed with archaeological purposes, with the aim to work with geometric microliths, a specific type of arrowhead designed either as a trapeze, a triangle or a segment or half-moon. The idea is to capture the morphometric variability of these polygons in order to understand if that variability can be indicative of culture transmission and culture evolution. 
+Therefore, the data that will be used through this vignette, attached to the package, consists of a set of those geometric microliths. Of course, once the basic functions of the package are understood, they can be applied to any kind of polygonal figure.
+GeomeasuRe relies on the coordinates of the polygons provided, either as spatial data or as simple data frames. However, introducing your own data can be tricky at first. Therefore, it is highly advisable to have a look at this other [vignette](https://github.com/acortell3) before introducing your own data.
+ 
+
+## Single polygons
+In this first part we will understand the functions of the package by performing a basic workflow with single polygons. 
+
+GeomeasuRe relies on two basic objects: a grid which will be used to measure the polygon at different points and the polygon itself. Each polygon must contain three shapes, the **ideal** shape, the **schematic** shape and the **real** shape.
+
+### The Grid
+The grid consists of 51 vertical lines and 63 horizontal lines. Each line is separated by 1 mm, and will capture the length of the polygon as it crosses it. This will provide a set of measures able to capture the variability of the polygon, and that can be used independently or as a whole for further testing.
+
+```{r}
+sp::plot(L_Grid, lwd = 0.4, col = "grey")
+sp::plot(Wi_Grid, lwd = 0.4, col = "darkgrey", add = TRUE)
+```
+
+Each object can contain three types of polygons, which are used with different objectives.
+
+### Ideal polygons
+The **ideal** polygons are used to capture the general measures of each figure. These include the lengths of each side, the total length and width of the polygon and the polygons' angles. They are also used to capture reliability (see **schematic** polygons). The idea is to mimic the measures that would be captured with a caliper. Therefore, the shape of the polygon for these measures **does not need to be accurate**. On the contrary, polygons here are constructed with very few points, only capturing each of the polygons' vertexes on order to measure sides, again, just as we would measure them with a caliper. The following functions will return the sides' and angles' measures.
+
+```{r}
+G_Length(all_i[1,]) ## Returns the length of the polygon
+G_Width(all_i[1,]) ## Returns the width of the polygon
+i_meas(all_i[1,]) ## Returns the sides of the polygon
+i_ang(all_i[1,]) ## Returns the angles of the polygon
+
+sp::plot(L_Grid, lwd = 0.4, col = "grey")
+sp::plot(Wi_Grid, lwd = 0.4, col = "darkgrey", add = TRUE)
+sp::plot(all_i[1,], add = TRUE, col = "lightblue")
+```
+
+### Schematic polygons
+`i_meas()` takes measures of the polygons assuming they are complete, but what if they are not? What if they are broken or have missing parts? Addressing this issue is the only scope of the **schematic** polygons. When polygons are incomplete, the **ideal** polygon will still be drawn as if it was complete. The **schematic** polygon, on its part, will be exactly the same, but discarding the missing part. This will be used to capture the overall reliability of the polygon, which is offered as a percentage, and is up to each researcher to accept upper or lower reliability thresholds.
+Symmetry can also be computed. However, because symmetry is highly dependent on the polygon being complete, the function uses both the **ideal** polygon and the **schematic** polygons and produces a warning if reliability is unsufficient.
+
+```{r}
+Reliab(all_i[1,],all_s[1,]) ## Computes reliability
+symtry(all_i[1,],all_s[1,]) ## Computes the symmetry of the polygon
+
+sp::plot(L_Grid, lwd = 0.4, col = "grey")
+sp::plot(Wi_Grid, lwd = 0.4, col = "darkgrey", add = TRUE)
+sp::plot(all_i[1,], add = TRUE, col = "lightblue")
+sp::plot(all_s[1,], add = TRUE, col = "pink")
+```
+
+This is interpreted as the polygon is missing a 9.64% of its original shape.
+
+### Real polygons
+
+These are the polygon types where most of the morphometric information is extracted. As we can see, here the shape of the polygon is captured accurately. 
+
+```{r}
+sp::plot(L_Grid, lwd = 0.4, col = "grey")
+sp::plot(Wi_Grid, lwd = 0.4, col = "darkgrey", add = TRUE)
+sp::plot(all_r[1,], add = TRUE, col = "orange")
+```
+
+As can be seen, this polygon has not been centered nor scaled. The functions `scl` and `centr` are aimed to scale and center the polygon. In practice, if both are implemented and the scale is the same for all the polygons used, this would be as performing a GPA (General Procrustes Analysis), commonly employed in Geometric Morphometrics. However, the researcher may be interested in differences in size as well, so these functions can be used independently. In this case, we will center the polygon, but not scale it.
+
+<font size = "2"> *Note that centering the polygon will not affect the measures taken by the measures over the ideal polygon* </font>
+
+```{r}
+c_p <- centr(all_r[1,])
+sp::plot(L_Grid, lwd = 0.4, col = "grey")
+sp::plot(Wi_Grid, lwd = 0.4, col = "darkgrey", add = TRUE)
+sp::plot(c_p, add = TRUE, col = "orange")
+```
+
+Now we are ready to take the measures of the lines crossing the polygon. There are two ways to do this. The first one is using `L_lines` which will capture each single measure
+```{r}
+
+L_lines(c_p)
+sp::plot(c_p, col = "orange")
+sp::plot(L_Grid, lwd = 0.4, col = "red", add = TRUE)
+sp::plot(Wi_Grid, lwd = 0.4, col = "red", add = TRUE)
+
+```
+
+As can be seen, each line that crosses the polygon offers its lenght as a measure, returning 0s the lines that are not crossing the polygon.
+
+For more accuracy, the function `L_hlines` divides the grid in two horizontal and two vertical grids, and captures the measures accordingly. This is useful in case the researcher wants to concentrate in, say, only the distal or the proximal side of the polygon.
+
+```{r}
+L_hlines(c_p)
+```
+
+Finally, as we had seen before, the polygon we are working with is not complete. The function `L_rel` is able to say, for each line crossing the polygon, if the piece is complete at that line, or not. The values returned are `y` (the polygon is complete at that line), `n` (the polygon is not complete at that line) and `np` (the polygon is not present at that line). However, if the overall reliability measure is low, all of the other measures and reliability measures may suffer.
+
+As other reliability measures, `L_rel` works with **ideal** and **schematic** shapes, so we must also center them before applying it, for l_lines to coincide.
+
+```{r}
+r_i <- centr(all_i[1,])
+r_s <- centr(all_s[1,])
+L_rel(r_i,r_s)
+```
+
+### General functions
+Other functions include the capability of knowing the orientation of the polygon, and being able to re-orient it if desired. These are very specific functions for the geometric microliths problem, but can also be used in other contexts.
+
+```{r}
+is_oriented(r_i) ## Returns the orientation of the polygon
+oriented <- Orient(r_i) ## Re-orients the polygon
+is_oriented(oriented)
+
+sp::plot(L_Grid, lwd = 0.4, col = "grey")
+sp::plot(Wi_Grid, lwd = 0.4, col = "darkgrey", add = TRUE)
+sp::plot(r_i, col = "blue", add = TRUE)
+sp::plot(oriented, col = "lightblue", add = TRUE)
+
+```
+
